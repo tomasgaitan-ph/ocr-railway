@@ -1,18 +1,24 @@
 import base64
 import pytesseract
 from pdf2image import convert_from_bytes
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
-# Tesseract path (in Render, Debian)
 pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 app = FastAPI()
 
+class OCRInput(BaseModel):
+    pdf_base64: str
+
 @app.post("/ocr")
-async def ocr_endpoint(pdf_base64: str = Body(...)):
+async def ocr_endpoint(data: OCRInput):
     try:
-        pdf_bytes = base64.b64decode(pdf_base64)
+        # obtener el base64 desde el modelo
+        pdf_bytes = base64.b64decode(data.pdf_base64)
+
+        # convertir PDF → imágenes
         images = convert_from_bytes(pdf_bytes, dpi=300)
 
         full_text = ""
